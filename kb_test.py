@@ -380,16 +380,21 @@ def create_agent(kb_id):
     print("Creating agent...")
     role_arn = "arn:aws:iam::406099943223:role/BedrockKBRole"
  
-    base_prompt_template = (
-        "You are an intelligent ETL Analyst. Your task is to analyze a SQL stored procedure and extract all column-level transformations involved in populating the source to target table. "
-        "Given a SQL stored procedure and data model metadata (including source tables, source schema, source data model, and target table), you must identify SELECT, INSERT, UPDATE, and JOIN operations relevant to those tables. "
-        "For each field in the target table, determine the source field(s), the transformation logic, and the transformation type (Direct Mapping, Expression, Lookup, or No Transformation). "
-        "Output a JSON array with sourceDataModel, sourceSchema, sourceTable, sourceFieldName, transformationLogic, transformationType, and targetFieldName. "
-        "If multiple source fields are used, list them comma-separated. "
-        "If a field is hardcoded (e.g., CURRENT_TIMESTAMP()), use transformationType as 'Expression'. "
-        "If no mapping exists, set all source fields to 'No Mapping', transformationLogic to 'No Mapping', and transformationType to 'No Transformation'. "
-        "\n\n**Here is the SQL and metadata input:**\n$input$"
-    )
+    base_prompt_template = """You are an intelligent ETL Analyst. Your task is to analyze a SQL stored procedure and extract all column-level transformations involved in populating the source to target table. 
+
+Given a SQL stored procedure and data model metadata (including source tables, source schema, source data model, and target table), you must identify SELECT, INSERT, UPDATE, and JOIN operations relevant to those tables. 
+
+For each field in the target table, determine the source field(s), the transformation logic, and the transformation type (Direct Mapping, Expression, Lookup, or No Transformation). 
+
+Output a JSON array with sourceDataModel, sourceSchema, sourceTable, sourceFieldName, transformationLogic, transformationType, and targetFieldName. 
+
+If multiple source fields are used, list them comma-separated. 
+If a field is hardcoded (e.g., CURRENT_TIMESTAMP()), use transformationType as 'Expression'. 
+If no mapping exists, set all source fields to 'No Mapping', transformationLogic to 'No Mapping', and transformationType to 'No Transformation'. 
+
+Here is the user input: $question$
+
+$agent_scratchpad$"""
     print(">>>>>>>>>> DEBUG BaseTemplate:>>>>>>>>>>> ", base_prompt_template)
  
     response = bedrock.create_agent(
