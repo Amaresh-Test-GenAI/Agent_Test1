@@ -380,7 +380,7 @@ def create_agent(kb_id):
     print("Creating agent...")
     role_arn = "arn:aws:iam::406099943223:role/BedrockKBRole"
  
-    base_prompt_template = """You are an intelligent ETL Analyst. Your task is to analyze a SQL stored procedure and extract all column-level transformations involved in populating the source to target table. 
+    instruction = """You are an intelligent ETL Analyst. Your task is to analyze a SQL stored procedure and extract all column-level transformations involved in populating the source to target table. 
 
 Given a SQL stored procedure and data model metadata (including source tables, source schema, source data model, and target table), you must identify SELECT, INSERT, UPDATE, and JOIN operations relevant to those tables. 
 
@@ -390,18 +390,14 @@ Output a JSON array with sourceDataModel, sourceSchema, sourceTable, sourceField
 
 If multiple source fields are used, list them comma-separated. 
 If a field is hardcoded (e.g., CURRENT_TIMESTAMP()), use transformationType as 'Expression'. 
-If no mapping exists, set all source fields to 'No Mapping', transformationLogic to 'No Mapping', and transformationType to 'No Transformation'. 
+If no mapping exists, set all source fields to 'No Mapping', transformationLogic to 'No Mapping', and transformationType to 'No Transformation'."""
 
-Here is the user input: $question$
-
-$agent_scratchpad$"""
-    print(">>>>>>>>>> DEBUG BaseTemplate:>>>>>>>>>>> ", base_prompt_template)
+    print(">>>>>>>>>> DEBUG Instruction:>>>>>>>>>>> ", instruction)
  
     response = bedrock.create_agent(
         agentName="genai-agent",
         agentResourceRoleArn=role_arn,
-        # instruction=base_prompt_template["messages"][0]["content"],
-        instruction="You are a helpful assistant that answers questions using the knowledge base For questions about data transformations, respond with the source tables, target tables, and transformation logic in JSON format.",
+        instruction=instruction,
         description="ETL Analyst Agent for parsing SQL stored procedures",
         foundationModel="arn:aws:bedrock:us-east-1:406099943223:inference-profile/us.meta.llama4-maverick-17b-instruct-v1:0",
         idleSessionTTLInSeconds=600,
@@ -410,24 +406,6 @@ $agent_scratchpad$"""
             "enabledMemoryTypes": ["SESSION_SUMMARY"],
             "sessionSummaryConfiguration": {"maxRecentSessions": 3},
             "storageDays": 1
-        },
-        promptOverrideConfiguration={
-            "promptConfigurations": [
-                {
-                    "promptType": "ORCHESTRATION",
-                    "promptCreationMode": "OVERRIDDEN",
-                    "promptState": "ENABLED",
-                    "basePromptTemplate": base_prompt_template,
-                    "parserMode": "DEFAULT",
-                    "inferenceConfiguration": {
-                        "maximumLength": 4000,
-                        "temperature": 0.5,
-                        "topP": 0.9,
-                        "topK": 250,
-                        "stopSequences": []
-                    }
-                }
-            ]
         }
     )
  
